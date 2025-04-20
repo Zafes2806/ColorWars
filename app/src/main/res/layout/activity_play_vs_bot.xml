@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#E6F0FA"
+    android:padding="16dp"
+    android:gravity="center_horizontal">
+
+    <!-- Tiêu đề "Tên trò chơi" (dùng hình ảnh) -->
+    <ImageView
+        android:id="@+id/title_image"
+        android:layout_width="292dp"
+        android:layout_height="119dp"
+        android:layout_marginTop="32dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_color_wars" />
+
+    <!-- Nút "Chọn mục độ dễ" (dùng hình ảnh) -->
+    <ImageButton
+        android:id="@+id/choose_easy_button"
+        android:layout_width="230dp"
+        android:layout_height="68dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="90dp"
+        android:layout_marginEnd="8dp"
+        android:adjustViewBounds="true"
+        android:background="@null"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_easy" />
+
+    <!-- Nút "Chọn mục độ trung" (dùng hình ảnh) -->
+    <ImageButton
+        android:id="@+id/choose_medium_button"
+
+        android:layout_width="230dp"
+        android:layout_height="68dp"
+        android:src="@drawable/ic_normal"
+        android:background="@null"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:layout_marginTop="30dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
+
+    <!-- Nút "Chọn mục độ khó" (dùng hình ảnh) -->
+    <ImageButton
+        android:id="@+id/choose_hard_button"
+        android:layout_width="230dp"
+        android:layout_height="68dp"
+        android:src="@drawable/ic_hard"
+        android:background="@null"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:layout_marginTop="30dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
+
+    <!-- Nút "Play" (dùng hình ảnh) -->
+
+
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Nút "Back" (dùng hình ảnh) -->
+    <ImageButton
+        android:id="@+id/back_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_back_button"
+        android:background="@null"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:layout_marginBottom="16dp" />
+
+</LinearLayout>

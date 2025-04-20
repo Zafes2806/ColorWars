@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#E6F0FA"
+    android:padding="16dp"
+    android:gravity="center_horizontal">
+
+    <!-- Tiêu đề "Tên trò chơi" (dùng hình ảnh) -->
+    <ImageView
+        android:id="@+id/title_image"
+        android:layout_width="292dp"
+        android:layout_height="119dp"
+        android:layout_marginTop="32dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_color_wars" />
+
+    <!-- Khu vực hiển thị bảng lưới chơi chi tiết -->
+    <LinearLayout
+        android:id="@+id/game_grid_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="30dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/rounded_white_background"
+        android:orientation="vertical"
+        android:padding="16dp">
+        <!-- Thay TextView bằng ImageView để hiển thị luật chơi -->
+        <ImageView
+            android:id="@+id/rule_full_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/rule"
+            android:layout_marginTop="30dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter" />
+    </LinearLayout>
+
+    <!-- Nút "Back về màn hình chính" (dùng hình ảnh) -->
+    <ImageButton
+        android:id="@+id/back_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_back_button"
+        android:background="@null"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp" />
+
+</LinearLayout>
