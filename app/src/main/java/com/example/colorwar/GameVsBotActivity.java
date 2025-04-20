@@ -78,7 +78,6 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
 
     @Override
     public void onCellClick(int position) {
-
         // Log trạng thái trước khi xử lý
         Log.d(TAG, "onCellClick called, position: " + position + ", isPlayer1Turn: " + isPlayer1Turn);
         printBoardState("Board state before player click:");
@@ -105,19 +104,12 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
                 updateBackground();
                 botTurn();
             });
-
-//            processExplosions(cellStates, position);
-//
-//            isPlayer1Turn = !isPlayer1Turn; // Chuyển lượt
-//            updateBackground(); // Cập nhật background
-//            botTurn(); // Gọi lượt của Bot
             return;
         }
 
         // Kiểm tra nếu ô thuộc về người chơi (đỏ)
         boolean validClick = false;
         if (state >= 1 && state <= 3) { // Người chơi (đỏ)
-            // Thêm kiểm tra nghiêm ngặt để đảm bảo state hợp lệ
             if (state < 1 || state > 3) {
                 Log.e(TAG, "ERROR: Invalid state for player's cell at position: " + position + ", state: " + state);
                 return;
@@ -137,7 +129,6 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
         // Nếu nhấn hợp lệ, áp dụng animation và xử lý nổ
         if (validClick) {
             applyAnimation(position);
-            // Log trạng thái ngay sau khi cập nhật để phát hiện lỗi
             Log.d(TAG, "State after update at position: " + position + ", state: " + cellStates[position]);
             printBoardState("Board state after updating cell state:");
             processExplosions(cellStates, position, () -> {
@@ -146,18 +137,6 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
                 updateBackground();
                 botTurn();
             });
-
-//            processExplosions(cellStates, position);
-//
-//            // Kiểm tra điều kiện thắng (chỉ từ lượt thứ hai trở đi)
-//            if (checkGameOver()) {
-//                Log.d(TAG, "Game over after player's move, skipping turn switch");
-//                return;
-//            }
-//
-//            isPlayer1Turn = !isPlayer1Turn; // Chuyển lượt
-//            updateBackground(); // Cập nhật background
-//            botTurn(); // Gọi lượt của Bot
         }
     }
 
@@ -180,7 +159,6 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
                 }
             }
 
-            // Log danh sách các vị trí hợp lệ để debug
             Log.d(TAG, "Valid positions for Bot: " + validPositions.toString());
             if (validPositions.isEmpty()) {
                 Log.d(TAG, "No valid positions for Bot to click, skipping turn");
@@ -192,33 +170,29 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
             int position = -1;
 
             if (difficulty.equals("Easy")) {
-                // Mức Easy: Chọn ngẫu nhiên ô hợp lệ
                 position = validPositions.get(random.nextInt(validPositions.size()));
             } else if (difficulty.equals("Normal")) {
-                // Mức Normal
                 if (botFirstClick) {
-                    // Bước đầu tiên: Chọn ô trống xa ô của người chơi nhất
                     int maxDistance = -1;
                     int playerRow = playerFirstMovePosition / 5;
                     int playerCol = playerFirstMovePosition % 5;
 
                     for (int pos : validPositions) {
-                        if (cellStates[pos] != 0) continue; // Chỉ xét ô trống
+                        if (cellStates[pos] != 0) continue;
                         int row = pos / 5;
                         int col = pos % 5;
-                        int distance = Math.abs(row - playerRow) + Math.abs(col - playerCol); // Khoảng cách Manhattan
+                        int distance = Math.abs(row - playerRow) + Math.abs(col - playerCol);
                         if (distance > maxDistance) {
                             maxDistance = distance;
                             position = pos;
                         }
                     }
                 } else {
-                    // Các bước sau: Ưu tiên gây nổ, sau đó chọn ô trống gần ô của người chơi
                     int maxDots = -1;
                     for (int pos : validPositions) {
                         int state = cellStates[pos];
-                        if (state >= 4 && state <= 6) { // Ô của bot
-                            int dots = state - 3; // Số chấm (1-3)
+                        if (state >= 4 && state <= 6) {
+                            int dots = state - 3;
                             if (dots > maxDots) {
                                 maxDots = dots;
                                 position = pos;
@@ -226,23 +200,22 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
                         }
                     }
 
-                    // Nếu không có ô sắp nổ, tìm ô trống gần ô của người chơi
                     if (position == -1) {
                         int maxEnemyNeighbors = -1;
                         for (int pos : validPositions) {
-                            if (cellStates[pos] != 0) continue; // Chỉ xét ô trống
+                            if (cellStates[pos] != 0) continue;
                             int row = pos / 5;
                             int col = pos % 5;
                             int enemyNeighbors = 0;
 
-                            int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}; // Lên, xuống, trái, phải
+                            int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
                             for (int[] dir : directions) {
                                 int newRow = row + dir[0];
                                 int newCol = col + dir[1];
                                 if (newRow >= 0 && newRow < 5 && newCol >= 0 && newCol < 5) {
                                     int neighborPos = newRow * 5 + newCol;
                                     int state = cellStates[neighborPos];
-                                    if (state >= 1 && state <= 3) { // Ô của người chơi
+                                    if (state >= 1 && state <= 3) {
                                         enemyNeighbors++;
                                     }
                                 }
@@ -255,30 +228,24 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
                         }
                     }
 
-                    // Dự phòng: Nếu không tìm thấy ô ưu tiên, chọn ngẫu nhiên
                     if (position == -1) {
                         position = validPositions.get(random.nextInt(validPositions.size()));
                     }
                 }
             } else if (difficulty.equals("Hard")) {
-                // Mức Hard: Sử dụng Minimax với Alpha-Beta Pruning
                 position = findBestMove(validPositions);
             }
 
-            // Kiểm tra lại vị trí được chọn để đảm bảo không phải ô của người chơi
             if (position == -1) {
                 Log.e(TAG, "ERROR: Bot failed to select a valid position, selecting random valid position");
-                // Chọn một vị trí ngẫu nhiên từ validPositions nếu không tìm được
                 position = validPositions.get(random.nextInt(validPositions.size()));
             }
 
             int state = cellStates[position];
             Log.d(TAG, "Bot (" + difficulty + ") chose position: " + position + ", state before move: " + state);
 
-            // Kiểm tra nếu vị trí được chọn là ô của người chơi (state từ 1 đến 3)
             if (state >= 1 && state <= 3) {
                 Log.e(TAG, "ERROR: Bot attempted to click on player's cell (state = " + state + ") at position: " + position);
-                // Bỏ qua nước đi này và chọn vị trí khác
                 validPositions.remove(Integer.valueOf(position));
                 if (validPositions.isEmpty()) {
                     Log.d(TAG, "No valid positions left for Bot after removing invalid move, skipping turn");
@@ -286,13 +253,11 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
                     updateBackground();
                     return;
                 }
-                // Chọn ngẫu nhiên một vị trí khác từ danh sách còn lại
                 position = validPositions.get(random.nextInt(validPositions.size()));
                 state = cellStates[position];
                 Log.d(TAG, "Bot reselected position: " + position + ", new state: " + state);
             }
 
-            // Xử lý logic bấm của Bot
             if (state == 0 && botFirstClick) {
                 cellStates[position] = 6; // Đặt xanh 3 chấm
                 botFirstClick = false;
@@ -315,26 +280,14 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
 
             applyAnimation(position);
             printBoardState("Board state after bot click (before explosion):");
-//            processExplosions(cellStates, position);
-//
-//            printBoardState("Board state after bot move:");
-//            // Kiểm tra điều kiện thắng (chỉ từ lượt thứ hai trở đi)
-//            if (checkGameOver()) {
-//                Log.d(TAG, "Game over after bot's move, skipping turn switch");
-//                return;
-//            }
-//
-//            // Đảm bảo chuyển lượt về người chơi
-//            isPlayer1Turn = !isPlayer1Turn;
-//            Log.d(TAG, "Turn switched to player, isPlayer1Turn: " + isPlayer1Turn);
-//            updateBackground();
+
             processExplosions(cellStates, position, () -> {
                 if (checkGameOver()) return;
                 isPlayer1Turn = true;
                 updateBackground();
             });
 
-        }, 1500); // Đợi 1 giây
+        }, 1250); // Đợi 1 giây
     }
 
     private void printBoardState(String message) {
@@ -348,7 +301,6 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
     }
 
     private boolean checkGameOver() {
-        // Không kiểm tra chiến thắng trong vòng đầu tiên
         if (isFirstRound) {
             Log.d(TAG, "Skipping game over check in first round");
             return false;
@@ -356,7 +308,6 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
 
         int playerCells = 0, botCells = 0;
 
-        // Đếm số ô của người chơi (đỏ) và bot (xanh)
         for (int state : cellStates) {
             if (state >= 1 && state <= 3) playerCells++; // Đỏ (1-3 chấm)
             if (state >= 4 && state <= 6) botCells++; // Xanh (1-3 chấm)
@@ -364,20 +315,16 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
 
         Log.d(TAG, "Check game over: playerCells = " + playerCells + ", botCells = " + botCells);
 
-        // Kiểm tra điều kiện thắng: Tất cả ô phải cùng một màu
         if (playerCells == 0 && botCells > 0) {
-            // Tất cả ô có màu là xanh (không còn ô đỏ)
             Log.d(TAG, "Bot wins: No red cells left, showing dialog");
             showGameOverDialog("Bot thắng!");
             return true;
         } else if (botCells == 0 && playerCells > 0) {
-            // Tất cả ô có màu là đỏ (không còn ô xanh)
             Log.d(TAG, "Player wins: No blue cells left, showing dialog");
             showGameOverDialog("Người chơi thắng!");
             return true;
         }
 
-        // Nếu cả hai màu vẫn tồn tại, trò chơi chưa kết thúc
         return false;
     }
 
@@ -388,7 +335,6 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
                 .setMessage(message)
                 .setPositiveButton("OK", (dialog, which) -> {
                     Log.d(TAG, "Game over dialog OK button clicked, returning to PlayVsBot");
-                    // Quay lại màn hình chọn mức độ
                     Intent intent = new Intent(GameVsBotActivity.this, PlayVsBot.class);
                     startActivity(intent);
                     finish();
@@ -397,108 +343,20 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
                 .show();
     }
 
-//    private void processExplosions(int[] states, int initialPosition) {
-//        ArrayList<Integer> cellsToExplode = new ArrayList<>();
-//        cellsToExplode.add(initialPosition);
-//
-//        // Keep track of processed positions to avoid infinite loops
-//        boolean[] processed = new boolean[states.length];
-//        processed[initialPosition] = true;
-//
-//        while (!cellsToExplode.isEmpty()) {
-//            int position = cellsToExplode.remove(0);
-//            int state = states[position];
-//            Log.d(TAG, "Processing explosion at position: " + position + ", state: " + state);
-//
-////             Only explode if state is 7 (red) or 8 (blue)
-//            if (state != 7 && state != 8) {
-//                Log.d(TAG, "No explosion at position: " + position + ", state: " + state + " (requires state 7 or 8 to explode)");
-//                continue;
-//            }
-//
-//            int baseColor = (state == 7) ? 1 : 4; // 1 cho đỏ, 4 cho xanh
-//            boolean isRedExplosion = (state == 7); // Nổ đỏ hay xanh
-//            states[position] = 0;
-//            Log.d(TAG, "Explosion at position: " + position + ", set to empty");
-//            if (states == cellStates) { // Only apply animation for real game state
-//                applyAnimation(position);
-//            }
-//
-//            // Collect adjacent positions
-//            int row = position / 5;
-//            int col = position % 5;
-//            int[] adjacentPositions = new int[4];
-//            boolean[] validAdjacent = new boolean[4];
-//
-//            adjacentPositions[0] = (row - 1) * 5 + col; // Lên
-//            adjacentPositions[1] = (row + 1) * 5 + col; // Xuống
-//            adjacentPositions[2] = row * 5 + (col - 1); // Trái
-//            adjacentPositions[3] = row * 5 + (col + 1); // Phải
-//
-//            validAdjacent[0] = (row - 1) >= 0;
-//            validAdjacent[1] = (row + 1) < 5;
-//            validAdjacent[2] = (col - 1) >= 0;
-//            validAdjacent[3] = (col + 1) < 5;
-//
-//            // Update adjacent cells
-//            for (int i = 0; i < 4; i++) {
-//                if (validAdjacent[i]) {
-//                    int adjPos = adjacentPositions[i];
-//                    if (processed[adjPos]) {
-//                        Log.d(TAG, "Skipping already processed position: " + adjPos);
-//                        continue;
-//                    }
-//                    processed[adjPos] = true;
-//
-//                    int adjState = states[adjPos];
-//                    Log.d(TAG, "Checking adjacent position: " + adjPos + ", state: " + adjState + ", isRedExplosion: " + isRedExplosion);
-//
-//                    // Tất cả ô lân cận (bao gồm ô của đối thủ) đều bị ảnh hưởng
-//                    if (adjState == 0) {
-//                        // Ô trống: Đặt thành màu của bên gây nổ với 1 chấm
-//                        states[adjPos] = baseColor;
-//                        Log.d(TAG, "Set adjacent position: " + adjPos + " to base color: " + baseColor);
-//                    } else if (adjState >= 1 && adjState <= 6) {
-//                        // Ô có chấm (đỏ hoặc xanh): Tăng số chấm và đổi màu
-//                        int dots = (adjState <= 3) ? adjState : (adjState - 3); // Số chấm hiện tại
-//                        dots++; // Tăng 1 chấm
-//                        if (dots >= 4) {
-//                            // Nếu đạt 4 chấm, đánh dấu để nổ
-//                            states[adjPos] = (baseColor == 1) ? 7 : 8;
-//                            cellsToExplode.add(adjPos);
-//                            Log.d(TAG, "Adjacent position: " + adjPos + " reached 4 dots, marked to explode, new state: " + states[adjPos]);
-//                        } else {
-//                            // Nếu chưa đạt 4 chấm, đổi màu và cập nhật số chấm
-//                            states[adjPos] = (baseColor == 1) ? dots : (dots + 3);
-//                            Log.d(TAG, "Adjacent position: " + adjPos + " changed color and increased dots, new state: " + states[adjPos]);
-//                        }
-//                    } else {
-//                        Log.e(TAG, "ERROR: Invalid state at adjacent position: " + adjPos + ", state: " + adjState);
-//                    }
-//                    if (states == cellStates) {
-//                        // Only apply animation for real game state
-//                        applyAnimation(adjPos);
-//                    }
-//                }
-//            }
-//        }
-//    }
+    private void processExplosions(int[] states, int initialPosition, Runnable onComplete) {
+        ArrayList<Integer> cellsToExplode = new ArrayList<>();
+        cellsToExplode.add(initialPosition);
 
+        boolean[] processed = new boolean[states.length];
+        processed[initialPosition] = true;
 
-private void processExplosions(int[] states, int initialPosition, Runnable onComplete) {
-    ArrayList<Integer> cellsToExplode = new ArrayList<>();
-    cellsToExplode.add(initialPosition);
-
-    boolean[] processed = new boolean[states.length];
-    processed[initialPosition] = true;
-
-    processNextExplosion(states, cellsToExplode, processed, onComplete);
-}
+        processNextExplosion(states, cellsToExplode, processed, onComplete);
+    }
 
     private void processNextExplosion(int[] states, ArrayList<Integer> cellsToExplode, boolean[] processed, Runnable onComplete) {
         if (cellsToExplode.isEmpty()) {
             if (states == cellStates && onComplete != null) {
-                onComplete.run(); // ✅ Gọi sau khi xử lý xong toàn bộ nổ
+                onComplete.run();
             }
             return;
         }
@@ -515,7 +373,6 @@ private void processExplosions(int[] states, int initialPosition, Runnable onCom
         final int colorBase = (state == 7) ? 1 : 4;
         final boolean isRed = (state == 7);
 
-        // Hiển thị hiệu ứng nổ tại ô hiện tại
         if (states == cellStates) {
             cellAdapter.updateCell(posToExplode, state);
             final View view = gameGrid.findViewHolderForAdapterPosition(posToExplode).itemView;
@@ -526,7 +383,6 @@ private void processExplosions(int[] states, int initialPosition, Runnable onCom
         }
 
         handler.postDelayed(() -> {
-            // Đặt ô hiện tại thành trống (0) khi nổ
             states[posToExplode] = 0;
             if (states == cellStates) {
                 applyAnimation(posToExplode);
@@ -537,7 +393,6 @@ private void processExplosions(int[] states, int initialPosition, Runnable onCom
             int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
             ArrayList<Integer> newExplosions = new ArrayList<>();
 
-            // Xử lý tất cả các ô lân cận ngay lập tức
             for (int[] dir : directions) {
                 int newRow = row + dir[0];
                 int newCol = col + dir[1];
@@ -553,40 +408,32 @@ private void processExplosions(int[] states, int initialPosition, Runnable onCom
                     dots++;
 
                     if (dots >= 4) {
-                        states[adjPos] = isRed ? 7 : 8; // Đánh dấu để nổ tiếp
-                        newExplosions.add(adjPos);      // Thêm vào danh sách nổ mới
+                        states[adjPos] = isRed ? 7 : 8;
+                        newExplosions.add(adjPos);
                     } else {
                         states[adjPos] = isRed ? dots : (dots + 3);
                     }
 
-                    // Cập nhật hiển thị ngay lập tức cho mỗi ô
                     if (states == cellStates) {
                         applyAnimation(adjPos);
                     }
                 }
             }
 
-            // Nếu có ô mới cần nổ tiếp, thêm vào danh sách và xử lý sau một khoảng delay
             if (!newExplosions.isEmpty()) {
                 handler.postDelayed(() -> {
-                    // Thêm tất cả ô cần nổ mới vào đầu danh sách để xử lý tiếp
                     for (int i = newExplosions.size() - 1; i >= 0; i--) {
                         cellsToExplode.add(0, newExplosions.get(i));
                     }
                     processNextExplosion(states, cellsToExplode, processed, onComplete);
-                }, 200); // Delay trước khi xử lý nổ tiếp theo
+                }, 200);
             } else {
-                // Không còn ô nào nổ mới từ vòng này, tiếp tục với các ô còn lại trong danh sách
                 processNextExplosion(states, cellsToExplode, processed, onComplete);
             }
-        }, 500); // Delay ban đầu cho mỗi ô nổ
+        }, 500);
     }
 
-
-
-
     private void applyAnimation(int position) {
-        // Cập nhật ô với animation
         Animation fadeIn = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
         View view = gameGrid.findViewHolderForAdapterPosition(position).itemView;
         if (view != null) {
@@ -598,50 +445,76 @@ private void processExplosions(int[] states, int initialPosition, Runnable onCom
         Log.d(TAG, "Applied animation at position: " + position + ", state: " + cellStates[position]);
     }
 
-    // Hàm đánh giá trạng thái bảng cho Minimax (Hard)
+    // Hàm đánh giá trạng thái bàn cờ
     private int evaluateBoard(int[] states) {
         int score = 0;
         int botCells = 0, playerCells = 0;
         int botExplosiveCells = 0, playerExplosiveCells = 0;
         int botStrategicCells = 0, playerStrategicCells = 0;
+        int botPotentialExplosions = 0, playerPotentialExplosions = 0;
 
         for (int i = 0; i < states.length; i++) {
             int state = states[i];
             int row = i / 5;
             int col = i % 5;
 
-            // Đếm số ô của bot và người chơi
-            if (state >= 4 && state <= 6) { // Ô của bot
+            if (state >= 4 && state <= 6) { // Ô của bot (xanh)
                 botCells++;
-                if (state == 6) botExplosiveCells++; // Ô sắp nổ của bot
-                // Ưu tiên ô ở góc và cạnh (chiến lược hơn)
-                if ((row == 0 || row == 4) && (col == 0 || col == 4)) botStrategicCells += 2; // Góc
+                if (state == 6) botExplosiveCells++;
+                botPotentialExplosions += countEnemyNeighbors(states, i, true);
+                if ((row == 0 || row == 4) && (col == 0 || col == 4)) botStrategicCells += 3; // Góc
                 else if (row == 0 || row == 4 || col == 0 || col == 4) botStrategicCells += 1; // Cạnh
-            } else if (state >= 1 && state <= 3) { // Ô của người chơi
+            } else if (state >= 1 && state <= 3) { // Ô của người chơi (đỏ)
                 playerCells++;
-                if (state == 3) playerExplosiveCells++; // Ô sắp nổ của người chơi
-                if ((row == 0 || row == 4) && (col == 0 || col == 4)) playerStrategicCells += 2; // Góc
+                if (state == 3) playerExplosiveCells++;
+                playerPotentialExplosions += countEnemyNeighbors(states, i, false);
+                if ((row == 0 || row == 4) && (col == 0 || col == 4)) playerStrategicCells += 3; // Góc
                 else if (row == 0 || row == 4 || col == 0 || col == 4) playerStrategicCells += 1; // Cạnh
             }
         }
 
-        // Tính điểm: Ưu tiên số ô, ô sắp nổ, và vị trí chiến lược
-        score = (botCells - playerCells) + 2 * (botExplosiveCells - playerExplosiveCells) + (botStrategicCells - playerStrategicCells);
+        score = (botCells - playerCells) * 10 +
+                (botExplosiveCells - playerExplosiveCells) * 20 +
+                (botStrategicCells - playerStrategicCells) * 5 +
+                (botPotentialExplosions - playerPotentialExplosions) * 15;
+
+        if (playerCells == 0 && botCells > 0) score += 1000;
+        if (botCells == 0 && playerCells > 0) score -= 1000;
+
         Log.d(TAG, "Evaluate board: score = " + score + ", botCells = " + botCells + ", playerCells = " + playerCells);
         return score;
+    }
+
+    // Đếm số ô của đối thủ xung quanh ô tại vị trí position
+    private int countEnemyNeighbors(int[] states, int position, boolean isBot) {
+        int row = position / 5;
+        int col = position % 5;
+        int count = 0;
+        int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+        for (int[] dir : directions) {
+            int newRow = row + dir[0];
+            int newCol = col + dir[1];
+            if (newRow >= 0 && newRow < 5 && newCol >= 0 && newCol < 5) {
+                int neighborPos = newRow * 5 + newCol;
+                int state = states[neighborPos];
+                if (isBot && state >= 1 && state <= 3) count++;
+                if (!isBot && state >= 4 && state <= 6) count++;
+            }
+        }
+        return count;
     }
 
     // Kiểm tra điều kiện trò chơi kết thúc trong Minimax
     private int checkGameOverForMinimax(int[] states) {
         if (isFirstRound) {
-            return 0; // 0: Trò chơi chưa kết thúc
+            return 0;
         }
 
         int playerCells = 0, botCells = 0;
 
         for (int state : states) {
-            if (state >= 1 && state <= 3) playerCells++; // Đỏ (1-3 chấm)
-            if (state >= 4 && state <= 6) botCells++; // Xanh (1-3 chấm)
+            if (state >= 1 && state <= 3) playerCells++;
+            if (state >= 4 && state <= 6) botCells++;
         }
 
         if (playerCells == 0 && botCells > 0) {
@@ -649,50 +522,69 @@ private void processExplosions(int[] states, int initialPosition, Runnable onCom
         } else if (botCells == 0 && playerCells > 0) {
             return -1000; // Người chơi thắng
         }
-        return 0; // Trò chơi chưa kết thúc
+        return 0;
     }
 
-    // Tìm nước đi tốt nhất bằng Minimax với Alpha-Beta Pruning (Hard)
+    // Tìm nước đi tốt nhất bằng Minimax với Alpha-Beta Pruning
     private int findBestMove(ArrayList<Integer> validPositions) {
         int bestScore = Integer.MIN_VALUE;
         int bestMove = -1;
         int alpha = Integer.MIN_VALUE;
         int beta = Integer.MAX_VALUE;
 
-        // Nếu là bước đầu tiên, ưu tiên đặt ở góc hoặc cạnh
         if (botFirstClick) {
+            // Các vị trí tương đối so với ô của người chơi: -4, -6, 4, 6
+            int[] offsets = {-6, -4, 4, 6};
+            ArrayList<Integer> priorityPositions = new ArrayList<>();
 
-            // Các vị trí ưu tiên: Góc và cạnh
-            int[] priorityPositions = {-6, -4, 4, 6}; // Góc: 0, 4, 20, 24; Cạnh: 2, 10, 14, 22
-            for (int pos : priorityPositions) {
-                bestMove = pos + playerFirstMovePosition;
-                Log.d(TAG, "Bot first move Bot first moveBot first moveBot first moveBot first move" +bestMove);
-                boolean check = validPositions.contains(bestMove) && bestMove >= 0 && bestMove <= 24 && bestMove % 5 != playerFirstMovePosition % 5 && bestMove / 5 != playerFirstMovePosition / 5;
-                if (check) {
-                    Log.d(TAG, "Bot first move Bot first moveBot first moveBot first moveBot first move" +bestMove);
+            int playerRow = playerFirstMovePosition / 5;
+            int playerCol = playerFirstMovePosition % 5;
+
+            // Kiểm tra từng offset
+            for (int offset : offsets) {
+                int pos = playerFirstMovePosition + offset;
+                // Kiểm tra tính hợp lệ của vị trí
+                if (pos >= 0 && pos < 25 && cellStates[pos] == 0 && validPositions.contains(pos)) {
+                    int row = pos / 5;
+                    int col = pos % 5;
+                    // Đảm bảo không cùng hàng hoặc cột với ô của người chơi
+                    if (row != playerRow && col != playerCol) {
+                        priorityPositions.add(pos);
+                    }
+                }
+            }
+
+            // Nếu có vị trí hợp lệ, chọn ngẫu nhiên từ danh sách priorityPositions
+            if (!priorityPositions.isEmpty()) {
+                bestMove = priorityPositions.get(random.nextInt(priorityPositions.size()));
+                Log.d(TAG, "Bot first move: Selected position " + bestMove + " from priority positions " + priorityPositions);
+                return bestMove;
+            } else {
+                // Nếu không có vị trí nào hợp lệ, chọn ngẫu nhiên từ validPositions
+                for (int pos : validPositions) {
+                    if (cellStates[pos] == 0) {
+                        bestMove = pos;
+                        break;
+                    }
+                }
+                if (bestMove != -1) {
+                    Log.d(TAG, "Bot first move: No priority positions available, selected random empty position " + bestMove);
                     return bestMove;
                 }
             }
-            if (bestMove != -1) {
-                Log.d(TAG, "Bot first move: Selected priority position: " + bestMove);
-                return bestMove;
-            }
         }
 
-        // Sử dụng Minimax nếu không phải bước đầu tiên hoặc không tìm thấy vị trí ưu tiên
+        // Sử dụng Minimax cho các nước đi tiếp theo
         for (int pos : validPositions) {
-            // Kiểm tra trước khi mô phỏng: Đảm bảo không phải ô của người chơi
             int state = cellStates[pos];
             if (state >= 1 && state <= 3) {
                 Log.e(TAG, "ERROR: findBestMove encountered player's cell (state = " + state + ") at position: " + pos);
-                continue; // Bỏ qua ô của người chơi
+                continue;
             }
 
-            // Tạo bản sao của trạng thái hiện tại để mô phỏng
             int[] simStates = cellStates.clone();
             boolean simBotFirstClick = botFirstClick;
 
-            // Thực hiện nước đi của bot trên bản sao
             if (simStates[pos] == 0 && simBotFirstClick) {
                 simStates[pos] = 6;
                 simBotFirstClick = false;
@@ -706,20 +598,18 @@ private void processExplosions(int[] states, int initialPosition, Runnable onCom
                 Log.e(TAG, "ERROR: Invalid state in findBestMove at position: " + pos + ", state: " + simStates[pos]);
                 continue;
             }
-//            processExplosions(simStates, pos); // Áp dụng nổ trên bản sao
 
-            // Gọi Minimax để đánh giá nước đi
-            int score = minimax(simStates, simBotFirstClick, 2, false, alpha, beta); // Độ sâu 2
+            processExplosionsForMinimax(simStates, pos, null);
+
+            int score = minimax(simStates, simBotFirstClick, 3, false, alpha, beta);
             Log.d(TAG, "Evaluated move at position: " + pos + ", score: " + score);
 
-            // Chỉ cập nhật bestMove nếu nước đi hợp lệ
             if (score > bestScore) {
                 bestScore = score;
                 bestMove = pos;
                 Log.d(TAG, "Updated bestMove to position: " + bestMove + ", score: " + bestScore);
             }
 
-            // Cập nhật alpha
             alpha = Math.max(alpha, bestScore);
             if (beta <= alpha) {
                 Log.d(TAG, "Alpha-beta pruning at position: " + pos);
@@ -727,93 +617,42 @@ private void processExplosions(int[] states, int initialPosition, Runnable onCom
             }
         }
 
-        // Kiểm tra lại bestMove trước khi trả về
         if (bestMove == -1) {
             Log.w(TAG, "No best move found, selecting random valid position");
             bestMove = validPositions.get(random.nextInt(validPositions.size()));
-        }
-
-        // Kiểm tra cuối cùng để đảm bảo bestMove không phải ô của người chơi
-        int finalState = cellStates[bestMove];
-        if (finalState >= 1 && finalState <= 3) {
-            Log.e(TAG, "ERROR: findBestMove selected player's cell (state = " + finalState + ") at position: " + bestMove);
-            // Chọn một vị trí khác từ validPositions
-            bestMove = -1;
-            for (int pos : validPositions) {
-                int state = cellStates[pos];
-                if (state == 0 || (state >= 4 && state <= 6)) {
-                    bestMove = pos;
-                    break;
-                }
-            }
-            if (bestMove == -1) {
-                Log.e(TAG, "ERROR: No valid position found after final check, selecting random position");
-                bestMove = validPositions.get(random.nextInt(validPositions.size()));
-            }
-            Log.d(TAG, "Reassigned bestMove to position: " + bestMove + ", state: " + cellStates[bestMove]);
         }
 
         Log.d(TAG, "Best move selected: position = " + bestMove + ", score = " + bestScore);
         return bestMove;
     }
 
-    // Thuật toán Minimax với Alpha-Beta Pruning (Hard)
+    // Thuật toán Minimax với Alpha-Beta Pruning
     private int minimax(int[] states, boolean simBotFirstClick, int depth, boolean isMaximizing, int alpha, int beta) {
-        // Kiểm tra điều kiện trò chơi kết thúc
         int gameOverScore = checkGameOverForMinimax(states);
         if (gameOverScore != 0) {
             Log.d(TAG, "Minimax: Game over detected, returning score: " + gameOverScore);
             return gameOverScore;
         }
 
-        // Điều kiện dừng: Đạt độ sâu
         if (depth == 0) {
             return evaluateBoard(states);
         }
 
         ArrayList<Integer> validMoves = new ArrayList<>();
         if (isMaximizing) {
-            // Lượt của bot
             for (int i = 0; i < states.length; i++) {
                 int state = states[i];
-                // Chỉ thêm ô trống (nếu là lần đầu tiên) hoặc ô của bot
                 if ((state == 0 && simBotFirstClick) || (state >= 4 && state <= 6)) {
                     validMoves.add(i);
                 }
             }
         } else {
-            // Lượt của người chơi
             for (int i = 0; i < states.length; i++) {
                 int state = states[i];
                 if ((state == 0 && player1FirstClick) || (state >= 1 && state <= 3)) {
                     validMoves.add(i);
                 }
             }
-        }
-
-        // Log danh sách validMoves để debug
-        Log.d(TAG, "Minimax depth " + depth + ", isMaximizing: " + isMaximizing + ", validMoves: " + validMoves.toString());
-        StringBuilder sb = new StringBuilder();
-        sb.append("Board state in minimax (depth ").append(depth).append(", isMaximizing: ").append(isMaximizing).append("):\n");
-        for (int i = 0; i < states.length; i++) {
-            sb.append(states[i]).append(" ");
-            if ((i + 1) % 5 == 0) sb.append("\n");
-        }
-        Log.d(TAG, sb.toString());
-
-        // Thêm kiểm tra bổ sung để đảm bảo validMoves không chứa ô của người chơi khi isMaximizing = true
-        if (isMaximizing) {
-            ArrayList<Integer> filteredMoves = new ArrayList<>();
-            for (int pos : validMoves) {
-                int state = states[pos];
-                if (state >= 1 && state <= 3) {
-                    Log.e(TAG, "ERROR: validMoves contains player's cell (state = " + state + ") at position: " + pos + " when isMaximizing = true");
-                    continue;
-                }
-                filteredMoves.add(pos);
-            }
-            validMoves = filteredMoves;
-            Log.d(TAG, "Filtered validMoves for bot: " + validMoves.toString());
         }
 
         if (validMoves.isEmpty()) {
@@ -824,18 +663,15 @@ private void processExplosions(int[] states, int initialPosition, Runnable onCom
         if (isMaximizing) {
             int maxEval = Integer.MIN_VALUE;
             for (int pos : validMoves) {
-                // Kiểm tra lại trước khi mô phỏng
                 int state = states[pos];
                 if (state >= 1 && state <= 3) {
                     Log.e(TAG, "ERROR: Minimax (maximizing) encountered player's cell (state = " + state + ") at position: " + pos);
-                    continue; // Bỏ qua ô của người chơi
+                    continue;
                 }
 
-                // Tạo bản sao mới để mô phỏng
                 int[] simStates = states.clone();
                 boolean simBotFirstClickCopy = simBotFirstClick;
 
-                // Thực hiện nước đi của bot trên bản sao
                 if (simStates[pos] == 0 && simBotFirstClickCopy) {
                     simStates[pos] = 6;
                     simBotFirstClickCopy = false;
@@ -845,31 +681,26 @@ private void processExplosions(int[] states, int initialPosition, Runnable onCom
                     } else {
                         simStates[pos] = 8;
                     }
-                } else {
-                    Log.e(TAG, "ERROR: Invalid state in minimax (maximizing) at position: " + pos + ", state: " + simStates[pos]);
-                    continue;
                 }
-//                processExplosions(simStates, pos);
 
-                // Đệ quy
+                processExplosionsForMinimax(simStates, pos, null);
+
                 int eval = minimax(simStates, simBotFirstClickCopy, depth - 1, false, alpha, beta);
                 maxEval = Math.max(maxEval, eval);
                 alpha = Math.max(alpha, eval);
 
                 if (beta <= alpha) {
                     Log.d(TAG, "Alpha-beta pruning in maximizing at depth: " + depth);
-                    break; // Cắt tỉa
+                    break;
                 }
             }
             return maxEval;
         } else {
             int minEval = Integer.MAX_VALUE;
             for (int pos : validMoves) {
-                // Tạo bản sao mới để mô phỏng
                 int[] simStates = states.clone();
                 boolean simPlayer1FirstClick = player1FirstClick;
 
-                // Thực hiện nước đi của người chơi trên bản sao
                 if (simStates[pos] == 0 && simPlayer1FirstClick) {
                     simStates[pos] = 3;
                     simPlayer1FirstClick = false;
@@ -880,19 +711,67 @@ private void processExplosions(int[] states, int initialPosition, Runnable onCom
                         simStates[pos] = 7;
                     }
                 }
-//                processExplosions(simStates, pos);
 
-                // Đệ quy
+                processExplosionsForMinimax(simStates, pos, null);
+
                 int eval = minimax(simStates, simBotFirstClick, depth - 1, true, alpha, beta);
                 minEval = Math.min(minEval, eval);
                 beta = Math.min(beta, eval);
 
                 if (beta <= alpha) {
                     Log.d(TAG, "Alpha-beta pruning in minimizing at depth: " + depth);
-                    break; // Cắt tỉa
+                    break;
                 }
             }
             return minEval;
+        }
+    }
+
+    // Xử lý nổ cho mô phỏng trong Minimax (không ảnh hưởng đến UI)
+    private void processExplosionsForMinimax(int[] states, int initialPosition, Runnable onComplete) {
+        ArrayList<Integer> cellsToExplode = new ArrayList<>();
+        cellsToExplode.add(initialPosition);
+
+        boolean[] processed = new boolean[states.length];
+        processed[initialPosition] = true;
+
+        while (!cellsToExplode.isEmpty()) {
+            int position = cellsToExplode.remove(0);
+            int state = states[position];
+
+            if (state != 7 && state != 8) continue;
+
+            states[position] = 0;
+            int row = position / 5;
+            int col = position % 5;
+            int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+            boolean isRed = (state == 7);
+
+            for (int[] dir : directions) {
+                int newRow = row + dir[0];
+                int newCol = col + dir[1];
+
+                if (newRow >= 0 && newRow < 5 && newCol >= 0 && newCol < 5) {
+                    int adjPos = newRow * 5 + newCol;
+                    if (processed[adjPos]) continue;
+                    processed[adjPos] = true;
+
+                    int adjState = states[adjPos];
+                    int dots = (adjState <= 3) ? adjState : (adjState >= 4 && adjState <= 6 ? adjState - 3 : 0);
+                    dots++;
+
+                    if (dots >= 4) {
+                        states[adjPos] = isRed ? 7 : 8;
+                        cellsToExplode.add(adjPos);
+                    } else {
+                        states[adjPos] = isRed ? dots : (dots + 3);
+                    }
+                }
+            }
+        }
+
+        if (onComplete != null) {
+            onComplete.run();
         }
     }
 }
