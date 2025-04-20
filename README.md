@@ -8,9 +8,11 @@ năng của mình trong trò chơi đầy hấp dẫn này!
   
   
 ## Giao diện trò chơi
-![Ảnh demo1](https://github.com/Zafes2806/ColorWars/blob/main/app/src/main/res/drawable/demo_game1.png)  
-![Ảnh demo2](https://github.com/Zafes2806/ColorWars/blob/main/app/src/main/res/drawable/demo_game3.png)  
+![Ảnh demo1](https://github.com/Zafes2806/ColorWars/blob/main/app/src/main/res/drawable/demo_game1.png)
+  
 ![Ảnh demo3](https://github.com/Zafes2806/ColorWars/blob/main/app/src/main/res/drawable/demo_game2.png)
+
+![Ảnh demo2](https://github.com/Zafes2806/ColorWars/blob/main/app/src/main/res/drawable/demo_game3.png)  
 
 
 ## Luật chơi
