@@ -55,6 +55,12 @@ public class CellAdapter extends RecyclerView.Adapter<CellAdapter.CellViewHolder
             case 6:
                 holder.cellImage.setImageResource(R.drawable.ic_cell_blue_3_dots);
                 break;
+            case 7:
+                holder.cellImage.setImageResource(R.drawable.ic_cell_red_4_dots);
+                break;
+            case 8:
+                holder.cellImage.setImageResource(R.drawable.ic_cell_blue_4_dot);
+                break;
             default:
                 // Bỏ qua các trạng thái không hợp lệ (7, 8) để tránh lỗi
                 holder.cellImage.setImageResource(R.drawable.ic_cell_empty);

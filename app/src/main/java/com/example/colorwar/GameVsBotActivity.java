@@ -78,6 +78,7 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
 
     @Override
     public void onCellClick(int position) {
+
         // Log trạng thái trước khi xử lý
         Log.d(TAG, "onCellClick called, position: " + position + ", isPlayer1Turn: " + isPlayer1Turn);
         printBoardState("Board state before player click:");
@@ -98,11 +99,18 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
             playerFirstMovePosition = position; // Lưu vị trí ô đầu tiên
             Log.d(TAG, "Player first click: Placed 3 red dots at position: " + position);
             applyAnimation(position);
-            processExplosions(cellStates, position);
+            processExplosions(cellStates, position, () -> {
+                if (checkGameOver()) return;
+                isPlayer1Turn = false;
+                updateBackground();
+                botTurn();
+            });
 
-            isPlayer1Turn = !isPlayer1Turn; // Chuyển lượt
-            updateBackground(); // Cập nhật background
-            botTurn(); // Gọi lượt của Bot
+//            processExplosions(cellStates, position);
+//
+//            isPlayer1Turn = !isPlayer1Turn; // Chuyển lượt
+//            updateBackground(); // Cập nhật background
+//            botTurn(); // Gọi lượt của Bot
             return;
         }
 
@@ -132,17 +140,24 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
             // Log trạng thái ngay sau khi cập nhật để phát hiện lỗi
             Log.d(TAG, "State after update at position: " + position + ", state: " + cellStates[position]);
             printBoardState("Board state after updating cell state:");
-            processExplosions(cellStates, position);
+            processExplosions(cellStates, position, () -> {
+                if (checkGameOver()) return;
+                isPlayer1Turn = false;
+                updateBackground();
+                botTurn();
+            });
 
-            // Kiểm tra điều kiện thắng (chỉ từ lượt thứ hai trở đi)
-            if (checkGameOver()) {
-                Log.d(TAG, "Game over after player's move, skipping turn switch");
-                return;
-            }
-
-            isPlayer1Turn = !isPlayer1Turn; // Chuyển lượt
-            updateBackground(); // Cập nhật background
-            botTurn(); // Gọi lượt của Bot
+//            processExplosions(cellStates, position);
+//
+//            // Kiểm tra điều kiện thắng (chỉ từ lượt thứ hai trở đi)
+//            if (checkGameOver()) {
+//                Log.d(TAG, "Game over after player's move, skipping turn switch");
+//                return;
+//            }
+//
+//            isPlayer1Turn = !isPlayer1Turn; // Chuyển lượt
+//            updateBackground(); // Cập nhật background
+//            botTurn(); // Gọi lượt của Bot
         }
     }
 
@@ -300,20 +315,26 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
 
             applyAnimation(position);
             printBoardState("Board state after bot click (before explosion):");
-            processExplosions(cellStates, position);
+//            processExplosions(cellStates, position);
+//
+//            printBoardState("Board state after bot move:");
+//            // Kiểm tra điều kiện thắng (chỉ từ lượt thứ hai trở đi)
+//            if (checkGameOver()) {
+//                Log.d(TAG, "Game over after bot's move, skipping turn switch");
+//                return;
+//            }
+//
+//            // Đảm bảo chuyển lượt về người chơi
+//            isPlayer1Turn = !isPlayer1Turn;
+//            Log.d(TAG, "Turn switched to player, isPlayer1Turn: " + isPlayer1Turn);
+//            updateBackground();
+            processExplosions(cellStates, position, () -> {
+                if (checkGameOver()) return;
+                isPlayer1Turn = true;
+                updateBackground();
+            });
 
-            printBoardState("Board state after bot move:");
-            // Kiểm tra điều kiện thắng (chỉ từ lượt thứ hai trở đi)
-            if (checkGameOver()) {
-                Log.d(TAG, "Game over after bot's move, skipping turn switch");
-                return;
-            }
-
-            // Đảm bảo chuyển lượt về người chơi
-            isPlayer1Turn = !isPlayer1Turn;
-            Log.d(TAG, "Turn switched to player, isPlayer1Turn: " + isPlayer1Turn);
-            updateBackground();
-        }, 1000); // Đợi 1 giây
+        }, 1500); // Đợi 1 giây
     }
 
     private void printBoardState(String message) {
@@ -376,91 +397,193 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
                 .show();
     }
 
-    private void processExplosions(int[] states, int initialPosition) {
-        ArrayList<Integer> cellsToExplode = new ArrayList<>();
-        cellsToExplode.add(initialPosition);
+//    private void processExplosions(int[] states, int initialPosition) {
+//        ArrayList<Integer> cellsToExplode = new ArrayList<>();
+//        cellsToExplode.add(initialPosition);
+//
+//        // Keep track of processed positions to avoid infinite loops
+//        boolean[] processed = new boolean[states.length];
+//        processed[initialPosition] = true;
+//
+//        while (!cellsToExplode.isEmpty()) {
+//            int position = cellsToExplode.remove(0);
+//            int state = states[position];
+//            Log.d(TAG, "Processing explosion at position: " + position + ", state: " + state);
+//
+////             Only explode if state is 7 (red) or 8 (blue)
+//            if (state != 7 && state != 8) {
+//                Log.d(TAG, "No explosion at position: " + position + ", state: " + state + " (requires state 7 or 8 to explode)");
+//                continue;
+//            }
+//
+//            int baseColor = (state == 7) ? 1 : 4; // 1 cho đỏ, 4 cho xanh
+//            boolean isRedExplosion = (state == 7); // Nổ đỏ hay xanh
+//            states[position] = 0;
+//            Log.d(TAG, "Explosion at position: " + position + ", set to empty");
+//            if (states == cellStates) { // Only apply animation for real game state
+//                applyAnimation(position);
+//            }
+//
+//            // Collect adjacent positions
+//            int row = position / 5;
+//            int col = position % 5;
+//            int[] adjacentPositions = new int[4];
+//            boolean[] validAdjacent = new boolean[4];
+//
+//            adjacentPositions[0] = (row - 1) * 5 + col; // Lên
+//            adjacentPositions[1] = (row + 1) * 5 + col; // Xuống
+//            adjacentPositions[2] = row * 5 + (col - 1); // Trái
+//            adjacentPositions[3] = row * 5 + (col + 1); // Phải
+//
+//            validAdjacent[0] = (row - 1) >= 0;
+//            validAdjacent[1] = (row + 1) < 5;
+//            validAdjacent[2] = (col - 1) >= 0;
+//            validAdjacent[3] = (col + 1) < 5;
+//
+//            // Update adjacent cells
+//            for (int i = 0; i < 4; i++) {
+//                if (validAdjacent[i]) {
+//                    int adjPos = adjacentPositions[i];
+//                    if (processed[adjPos]) {
+//                        Log.d(TAG, "Skipping already processed position: " + adjPos);
+//                        continue;
+//                    }
+//                    processed[adjPos] = true;
+//
+//                    int adjState = states[adjPos];
+//                    Log.d(TAG, "Checking adjacent position: " + adjPos + ", state: " + adjState + ", isRedExplosion: " + isRedExplosion);
+//
+//                    // Tất cả ô lân cận (bao gồm ô của đối thủ) đều bị ảnh hưởng
+//                    if (adjState == 0) {
+//                        // Ô trống: Đặt thành màu của bên gây nổ với 1 chấm
+//                        states[adjPos] = baseColor;
+//                        Log.d(TAG, "Set adjacent position: " + adjPos + " to base color: " + baseColor);
+//                    } else if (adjState >= 1 && adjState <= 6) {
+//                        // Ô có chấm (đỏ hoặc xanh): Tăng số chấm và đổi màu
+//                        int dots = (adjState <= 3) ? adjState : (adjState - 3); // Số chấm hiện tại
+//                        dots++; // Tăng 1 chấm
+//                        if (dots >= 4) {
+//                            // Nếu đạt 4 chấm, đánh dấu để nổ
+//                            states[adjPos] = (baseColor == 1) ? 7 : 8;
+//                            cellsToExplode.add(adjPos);
+//                            Log.d(TAG, "Adjacent position: " + adjPos + " reached 4 dots, marked to explode, new state: " + states[adjPos]);
+//                        } else {
+//                            // Nếu chưa đạt 4 chấm, đổi màu và cập nhật số chấm
+//                            states[adjPos] = (baseColor == 1) ? dots : (dots + 3);
+//                            Log.d(TAG, "Adjacent position: " + adjPos + " changed color and increased dots, new state: " + states[adjPos]);
+//                        }
+//                    } else {
+//                        Log.e(TAG, "ERROR: Invalid state at adjacent position: " + adjPos + ", state: " + adjState);
+//                    }
+//                    if (states == cellStates) {
+//                        // Only apply animation for real game state
+//                        applyAnimation(adjPos);
+//                    }
+//                }
+//            }
+//        }
+//    }
 
-        // Keep track of processed positions to avoid infinite loops
-        boolean[] processed = new boolean[states.length];
-        processed[initialPosition] = true;
 
-        while (!cellsToExplode.isEmpty()) {
-            int position = cellsToExplode.remove(0);
-            int state = states[position];
-            Log.d(TAG, "Processing explosion at position: " + position + ", state: " + state);
+private void processExplosions(int[] states, int initialPosition, Runnable onComplete) {
+    ArrayList<Integer> cellsToExplode = new ArrayList<>();
+    cellsToExplode.add(initialPosition);
 
-            // Only explode if state is 7 (red) or 8 (blue)
-            if (state != 7 && state != 8) {
-                Log.d(TAG, "No explosion at position: " + position + ", state: " + state + " (requires state 7 or 8 to explode)");
-                continue;
+    boolean[] processed = new boolean[states.length];
+    processed[initialPosition] = true;
+
+    processNextExplosion(states, cellsToExplode, processed, onComplete);
+}
+
+    private void processNextExplosion(int[] states, ArrayList<Integer> cellsToExplode, boolean[] processed, Runnable onComplete) {
+        if (cellsToExplode.isEmpty()) {
+            if (states == cellStates && onComplete != null) {
+                onComplete.run(); // ✅ Gọi sau khi xử lý xong toàn bộ nổ
+            }
+            return;
+        }
+
+        int position = cellsToExplode.remove(0);
+        int state = states[position];
+
+        if (state != 7 && state != 8) {
+            processNextExplosion(states, cellsToExplode, processed, onComplete);
+            return;
+        }
+
+        final int posToExplode = position;
+        final int colorBase = (state == 7) ? 1 : 4;
+        final boolean isRed = (state == 7);
+
+        // Hiển thị hiệu ứng nổ tại ô hiện tại
+        if (states == cellStates) {
+            cellAdapter.updateCell(posToExplode, state);
+            final View view = gameGrid.findViewHolderForAdapterPosition(posToExplode).itemView;
+            if (view != null) {
+                Animation fadeIn = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
+                view.startAnimation(fadeIn);
+            }
+        }
+
+        handler.postDelayed(() -> {
+            // Đặt ô hiện tại thành trống (0) khi nổ
+            states[posToExplode] = 0;
+            if (states == cellStates) {
+                applyAnimation(posToExplode);
             }
 
-            int baseColor = (state == 7) ? 1 : 4; // 1 cho đỏ, 4 cho xanh
-            boolean isRedExplosion = (state == 7); // Nổ đỏ hay xanh
-            states[position] = 0;
-            Log.d(TAG, "Explosion at position: " + position + ", set to empty");
-            if (states == cellStates) { // Only apply animation for real game state
-                applyAnimation(position);
-            }
+            int row = posToExplode / 5;
+            int col = posToExplode % 5;
+            int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+            ArrayList<Integer> newExplosions = new ArrayList<>();
 
-            // Collect adjacent positions
-            int row = position / 5;
-            int col = position % 5;
-            int[] adjacentPositions = new int[4];
-            boolean[] validAdjacent = new boolean[4];
+            // Xử lý tất cả các ô lân cận ngay lập tức
+            for (int[] dir : directions) {
+                int newRow = row + dir[0];
+                int newCol = col + dir[1];
 
-            adjacentPositions[0] = (row - 1) * 5 + col; // Lên
-            adjacentPositions[1] = (row + 1) * 5 + col; // Xuống
-            adjacentPositions[2] = row * 5 + (col - 1); // Trái
-            adjacentPositions[3] = row * 5 + (col + 1); // Phải
+                if (newRow >= 0 && newRow < 5 && newCol >= 0 && newCol < 5) {
+                    int adjPos = newRow * 5 + newCol;
 
-            validAdjacent[0] = (row - 1) >= 0;
-            validAdjacent[1] = (row + 1) < 5;
-            validAdjacent[2] = (col - 1) >= 0;
-            validAdjacent[3] = (col + 1) < 5;
-
-            // Update adjacent cells
-            for (int i = 0; i < 4; i++) {
-                if (validAdjacent[i]) {
-                    int adjPos = adjacentPositions[i];
-                    if (processed[adjPos]) {
-                        Log.d(TAG, "Skipping already processed position: " + adjPos);
-                        continue;
-                    }
+                    if (processed[adjPos]) continue;
                     processed[adjPos] = true;
 
                     int adjState = states[adjPos];
-                    Log.d(TAG, "Checking adjacent position: " + adjPos + ", state: " + adjState + ", isRedExplosion: " + isRedExplosion);
+                    int dots = (adjState <= 3) ? adjState : (adjState >= 4 && adjState <= 6 ? adjState - 3 : 0);
+                    dots++;
 
-                    // Tất cả ô lân cận (bao gồm ô của đối thủ) đều bị ảnh hưởng
-                    if (adjState == 0) {
-                        // Ô trống: Đặt thành màu của bên gây nổ với 1 chấm
-                        states[adjPos] = baseColor;
-                        Log.d(TAG, "Set adjacent position: " + adjPos + " to base color: " + baseColor);
-                    } else if (adjState >= 1 && adjState <= 6) {
-                        // Ô có chấm (đỏ hoặc xanh): Tăng số chấm và đổi màu
-                        int dots = (adjState <= 3) ? adjState : (adjState - 3); // Số chấm hiện tại
-                        dots++; // Tăng 1 chấm
-                        if (dots >= 4) {
-                            // Nếu đạt 4 chấm, đánh dấu để nổ
-                            states[adjPos] = (baseColor == 1) ? 7 : 8;
-                            cellsToExplode.add(adjPos);
-                            Log.d(TAG, "Adjacent position: " + adjPos + " reached 4 dots, marked to explode, new state: " + states[adjPos]);
-                        } else {
-                            // Nếu chưa đạt 4 chấm, đổi màu và cập nhật số chấm
-                            states[adjPos] = (baseColor == 1) ? dots : (dots + 3);
-                            Log.d(TAG, "Adjacent position: " + adjPos + " changed color and increased dots, new state: " + states[adjPos]);
-                        }
+                    if (dots >= 4) {
+                        states[adjPos] = isRed ? 7 : 8; // Đánh dấu để nổ tiếp
+                        newExplosions.add(adjPos);      // Thêm vào danh sách nổ mới
                     } else {
-                        Log.e(TAG, "ERROR: Invalid state at adjacent position: " + adjPos + ", state: " + adjState);
+                        states[adjPos] = isRed ? dots : (dots + 3);
                     }
-                    if (states == cellStates) { // Only apply animation for real game state
+
+                    // Cập nhật hiển thị ngay lập tức cho mỗi ô
+                    if (states == cellStates) {
                         applyAnimation(adjPos);
                     }
                 }
             }
-        }
+
+            // Nếu có ô mới cần nổ tiếp, thêm vào danh sách và xử lý sau một khoảng delay
+            if (!newExplosions.isEmpty()) {
+                handler.postDelayed(() -> {
+                    // Thêm tất cả ô cần nổ mới vào đầu danh sách để xử lý tiếp
+                    for (int i = newExplosions.size() - 1; i >= 0; i--) {
+                        cellsToExplode.add(0, newExplosions.get(i));
+                    }
+                    processNextExplosion(states, cellsToExplode, processed, onComplete);
+                }, 200); // Delay trước khi xử lý nổ tiếp theo
+            } else {
+                // Không còn ô nào nổ mới từ vòng này, tiếp tục với các ô còn lại trong danh sách
+                processNextExplosion(states, cellsToExplode, processed, onComplete);
+            }
+        }, 500); // Delay ban đầu cho mỗi ô nổ
     }
+
+
+
 
     private void applyAnimation(int position) {
         // Cập nhật ô với animation
@@ -538,20 +661,16 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
 
         // Nếu là bước đầu tiên, ưu tiên đặt ở góc hoặc cạnh
         if (botFirstClick) {
-            int playerRow = playerFirstMovePosition / 5;
-            int playerCol = playerFirstMovePosition % 5;
-            int maxDistance = -1;
 
             // Các vị trí ưu tiên: Góc và cạnh
-            int[] priorityPositions = {0, 4, 20, 24, 2, 10, 14, 22}; // Góc: 0, 4, 20, 24; Cạnh: 2, 10, 14, 22
+            int[] priorityPositions = {-6, -4, 4, 6}; // Góc: 0, 4, 20, 24; Cạnh: 2, 10, 14, 22
             for (int pos : priorityPositions) {
-                if (!validPositions.contains(pos)) continue;
-                int row = pos / 5;
-                int col = pos % 5;
-                int distance = Math.abs(row - playerRow) + Math.abs(col - playerCol);
-                if (distance > maxDistance) {
-                    maxDistance = distance;
-                    bestMove = pos;
+                bestMove = pos + playerFirstMovePosition;
+                Log.d(TAG, "Bot first move Bot first moveBot first moveBot first moveBot first move" +bestMove);
+                boolean check = validPositions.contains(bestMove) && bestMove >= 0 && bestMove <= 24 && bestMove % 5 != playerFirstMovePosition % 5 && bestMove / 5 != playerFirstMovePosition / 5;
+                if (check) {
+                    Log.d(TAG, "Bot first move Bot first moveBot first moveBot first moveBot first move" +bestMove);
+                    return bestMove;
                 }
             }
             if (bestMove != -1) {
@@ -587,7 +706,7 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
                 Log.e(TAG, "ERROR: Invalid state in findBestMove at position: " + pos + ", state: " + simStates[pos]);
                 continue;
             }
-            processExplosions(simStates, pos); // Áp dụng nổ trên bản sao
+//            processExplosions(simStates, pos); // Áp dụng nổ trên bản sao
 
             // Gọi Minimax để đánh giá nước đi
             int score = minimax(simStates, simBotFirstClick, 2, false, alpha, beta); // Độ sâu 2
@@ -730,7 +849,7 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
                     Log.e(TAG, "ERROR: Invalid state in minimax (maximizing) at position: " + pos + ", state: " + simStates[pos]);
                     continue;
                 }
-                processExplosions(simStates, pos);
+//                processExplosions(simStates, pos);
 
                 // Đệ quy
                 int eval = minimax(simStates, simBotFirstClickCopy, depth - 1, false, alpha, beta);
@@ -761,7 +880,7 @@ public class GameVsBotActivity extends AppCompatActivity implements CellAdapter.
                         simStates[pos] = 7;
                     }
                 }
-                processExplosions(simStates, pos);
+//                processExplosions(simStates, pos);
 
                 // Đệ quy
                 int eval = minimax(simStates, simBotFirstClick, depth - 1, true, alpha, beta);

@@ -2,6 +2,8 @@ package com.example.colorwar;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
@@ -23,6 +25,7 @@ public class GameActivity extends AppCompatActivity implements CellAdapter.OnCel
     private boolean player1FirstClick = true; // Theo dõi lần nhấn đầu tiên của Người chơi 1
     private boolean player2FirstClick = true; // Theo dõi lần nhấn đầu tiên của Người chơi 2
     private boolean isFirstRound = true; // Theo dõi vòng đầu tiên (người chơi 1 và 2 chưa hoàn thành lượt đầu)
+    private boolean explosionInProgress = false; // Theo dõi xem có vụ nổ đang được xử lý không
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +67,12 @@ public class GameActivity extends AppCompatActivity implements CellAdapter.OnCel
         int state = cellStates[position];
         Log.d(TAG, "Player " + (isPlayer1Turn ? "1" : "2") + " clicked position: " + position + ", state: " + state);
 
+        // Kiểm tra nếu đang xử lý vụ nổ, không cho phép nhấn mới
+        if (explosionInProgress) {
+            Log.d(TAG, "Click ignored: Explosion in progress");
+            return;
+        }
+
         // Kiểm tra nếu ô trống và là lần nhấn đầu tiên
         if (state == 0 && (isPlayer1Turn ? player1FirstClick : player2FirstClick)) {
             cellStates[position] = isPlayer1Turn ? 3 : 6; // Đặt 3 chấm (đỏ hoặc xanh)
@@ -77,9 +86,11 @@ public class GameActivity extends AppCompatActivity implements CellAdapter.OnCel
             applyAnimation(position);
             checkExplosion(position);
 
-            isPlayer1Turn = !isPlayer1Turn; // Chuyển lượt
-            updateBackground();
-            if (checkGameOver()) return;
+            // Chuyển lượt nếu không có vụ nổ
+            if (!explosionInProgress && !checkGameOver()) {
+                isPlayer1Turn = !isPlayer1Turn;
+                updateBackground();
+            }
             return;
         }
 
@@ -90,7 +101,7 @@ public class GameActivity extends AppCompatActivity implements CellAdapter.OnCel
                 cellStates[position] = state + 1; // Tăng số chấm
                 Log.d(TAG, "Increased red dots at position: " + position + ", new state: " + cellStates[position]);
             } else {
-                cellStates[position] = 7; // Tạm thời đặt thành 4 chấm đỏ để kích hoạt nổ
+                cellStates[position] = 7; // Tạm thời đặt thành 4 chấm đỏ
                 Log.d(TAG, "Red cell at position: " + position + " reached 4 dots (temp state: 7)");
             }
             validClick = true;
@@ -99,7 +110,7 @@ public class GameActivity extends AppCompatActivity implements CellAdapter.OnCel
                 cellStates[position] = state + 1; // Tăng số chấm
                 Log.d(TAG, "Increased blue dots at position: " + position + ", new state: " + cellStates[position]);
             } else {
-                cellStates[position] = 8; // Tạm thời đặt thành 4 chấm xanh để kích hoạt nổ
+                cellStates[position] = 8; // Tạm thời đặt thành 4 chấm xanh
                 Log.d(TAG, "Blue cell at position: " + position + " reached 4 dots (temp state: 8)");
             }
             validClick = true;
@@ -107,16 +118,22 @@ public class GameActivity extends AppCompatActivity implements CellAdapter.OnCel
             Log.d(TAG, "Invalid click by Player " + (isPlayer1Turn ? "1" : "2") + " at position: " + position + ", state: " + state);
         }
 
-        // Nếu nhấn hợp lệ, áp dụng animation và kiểm tra nổ
+        // Nếu nhấn hợp lệ, áp dụng animation và xử lý vụ nổ
         if (validClick) {
-            applyAnimation(position);
-            checkExplosion(position);
-
-            // Kiểm tra điều kiện thắng (chỉ từ lượt thứ hai trở đi)
-            if (checkGameOver()) return;
-
-            isPlayer1Turn = !isPlayer1Turn; // Chuyển lượt
-            updateBackground();
+            applyAnimation(position); // Hiển thị trạng thái mới (bao gồm 4 chấm)
+            if (cellStates[position] == 7 || cellStates[position] == 8) {
+                // Nếu ô đạt 4 chấm, trì hoãn xử lý vụ nổ
+                explosionInProgress = true;
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    checkExplosion(position);
+                }, 500); // Trễ 500ms để hiển thị trạng thái 4 chấm
+            } else {
+                // Nếu không phải vụ nổ, kiểm tra game over và chuyển lượt
+                if (!checkGameOver()) {
+                    isPlayer1Turn = !isPlayer1Turn;
+                    updateBackground();
+                }
+            }
         }
     }
 
@@ -129,10 +146,10 @@ public class GameActivity extends AppCompatActivity implements CellAdapter.OnCel
 
         int player1Cells = 0, player2Cells = 0;
 
-        // Đếm số ô của người chơi 1 (đỏ) và người chơi 2 (xanh)
+        // Đếm số ô của người chơi 1 (đỏ) và người chơi 2 (xanh), bao gồm cả trạng thái 4 chấm
         for (int state : cellStates) {
-            if (state >= 1 && state <= 3) player1Cells++; // Đỏ (1-3 chấm)
-            if (state >= 4 && state <= 6) player2Cells++; // Xanh (1-3 chấm)
+            if (state >= 1 && state <= 3 || state == 7) player1Cells++; // Đỏ (1-3 chấm hoặc 4 chấm)
+            if (state >= 4 && state <= 6 || state == 8) player2Cells++; // Xanh (1-3 chấm hoặc 4 chấm)
         }
 
         Log.d(TAG, "Check game over: player1Cells = " + player1Cells + ", player2Cells = " + player2Cells);
@@ -203,6 +220,7 @@ public class GameActivity extends AppCompatActivity implements CellAdapter.OnCel
                         // Ô trống: Đặt thành màu của bên gây nổ với 1 chấm
                         cellStates[adjPos] = baseColor;
                         Log.d(TAG, "Set adjacent position: " + adjPos + " to base color: " + baseColor);
+                        applyAnimation(adjPos);
                     } else if (adjState >= 1 && adjState <= 6) {
                         // Ô có chấm (đỏ hoặc xanh): Tăng số chấm và đổi màu
                         int dots = (adjState <= 3) ? adjState : (adjState - 3); // Số chấm hiện tại
@@ -211,16 +229,42 @@ public class GameActivity extends AppCompatActivity implements CellAdapter.OnCel
                             // Nếu đạt 4 chấm, ô sẽ nổ
                             cellStates[adjPos] = (baseColor == 1) ? 7 : 8;
                             Log.d(TAG, "Adjacent position: " + adjPos + " reached 4 dots, will explode, new state: " + cellStates[adjPos]);
+                            applyAnimation(adjPos);
+                            // Trì hoãn xử lý vụ nổ của ô lân cận
+                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                checkExplosion(adjPos);
+                            }, 500); // Trễ 500ms để hiển thị trạng thái 4 chấm
                         } else {
                             // Nếu chưa đạt 4 chấm, đổi màu và cập nhật số chấm
                             cellStates[adjPos] = (baseColor == 1) ? dots : (dots + 3);
                             Log.d(TAG, "Adjacent position: " + adjPos + " changed color and increased dots, new state: " + cellStates[adjPos]);
+                            applyAnimation(adjPos);
                         }
                     }
-
-                    applyAnimation(adjPos);
-                    checkExplosion(adjPos);
                 }
+            }
+
+            // Kiểm tra game over sau khi xử lý vụ nổ
+            if (checkGameOver()) {
+                explosionInProgress = false;
+                return;
+            }
+
+            // Kiểm tra xem còn vụ nổ nào đang chờ xử lý không
+            boolean hasPendingExplosions = false;
+            for (int s : cellStates) {
+                if (s == 7 || s == 8) {
+                    hasPendingExplosions = true;
+                    break;
+                }
+            }
+
+            // Nếu không còn vụ nổ nào, đặt lại trạng thái và chuyển lượt
+            if (!hasPendingExplosions) {
+                explosionInProgress = false;
+                isPlayer1Turn = !isPlayer1Turn;
+                updateBackground();
+                Log.d(TAG, "All explosions completed, turn switched to Player " + (isPlayer1Turn ? "1" : "2"));
             }
         }
     }
